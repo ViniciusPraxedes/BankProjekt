@@ -1,11 +1,17 @@
 package org.example;
 
 import org.junit.jupiter.api.Test;
+import org.mockito.configuration.IMockitoConfiguration;
 
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.function.BooleanSupplier;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ATMTest {
 
@@ -14,99 +20,211 @@ class ATMTest {
     }
 
     @Test
-    void logIn() {
+    void logInShouldSuccess() {
+        //Given
+        ATM atmMock = mock(ATM.class);
         Database database = new Database();
-        ArrayList<Account>testAccounts = new ArrayList<>();
-        Account testAccount1 = new Account("123",100);
-        Account testAccount2 = new Account("123",100);
-        User testUser = new User("TestUser","123",testAccounts);
-
         database.addStuff();
-        testAccounts.add(testAccount1);
-        testAccounts.add(testAccount2);
-        database.users.add(testUser);
-
-        String expectedName = "TestUser";
-        String expectedPassword = "123";
-
-        String actualName = null;
-        String actualPassword = null;
-
-        for(int i = 0; i < database.users.size(); i++){
-            if (database.users.get(i).name.equals("TestUser") && database.users.get(i).password.equals("123")){
-                actualName = database.users.get(i).name;
-                actualPassword = database.users.get(i).password;
-                break;
-            }
+        String expectedName = database.testUser.name;
+        String expectedPassword = database.testUser.password;
+        String nameInput = "TestUser";
+        String passwordInput = "123";
+        String actualName = nameInput;
+        String actualPassword = passwordInput;
+        //When
+        if (actualName.equals(expectedName) && actualPassword.equals(expectedPassword)){
+            when(atmMock.logIn()).thenReturn(true);
+        }else {
+            when(atmMock.logIn()).thenReturn(false);
         }
+        //Then
+        assertTrue(atmMock.logIn());
 
-        assertEquals(expectedName,actualName);
-        assertEquals(expectedPassword,actualPassword);
+    }
+    @Test
+    void loginInvalidName(){
+        //Given
+        ATM atmMock = mock(ATM.class);
+        Database database = new Database();
+        database.addStuff();
+        String expectedName = database.testUser.name;
+        String expectedPassword = database.testUser.password;
+        String nameInput = "UserThatDoesntExists";
+        String passwordInput = "123";
+        String actualName = nameInput;
+        String actualPassword = passwordInput;
+        //When
+        if (actualName.equals(expectedName) && actualPassword.equals(expectedPassword)){
+            when(atmMock.logIn()).thenReturn(true);
+        }else {
+            when(atmMock.logIn()).thenReturn(false);
+        }
+        //Then
+        assertFalse(atmMock.logIn());
+    }
+    @Test
+    void loginInvalidPassword(){
+        //Given
+        ATM atmMock = mock(ATM.class);
+        Database database = new Database();
+        database.addStuff();
+        String expectedName = database.testUser.name;
+        String expectedPassword = database.testUser.password;
+        String nameInput = "TestUser";
+        String passwordInput = "WrongPassword";
+        String actualName = nameInput;
+        String actualPassword = passwordInput;
+        //When
+        if (actualName.equals(expectedName) && actualPassword.equals(expectedPassword)){
+            when(atmMock.logIn()).thenReturn(true);
+        }else {
+            when(atmMock.logIn()).thenReturn(false);
+        }
+        //Then
+        assertFalse(atmMock.logIn());
     }
 
     @Test
-    void checkAccountBalance() {
+    void checkAccountBalanceShouldSuccess() {
+        //Given
         ATM atm = new ATM();
-        Database database = new Database();
-        ArrayList<Account>testAccounts = new ArrayList<>();
-        Account testAccount1 = new Account("123",100);
-        Account testAccount2 = new Account("123",100);
-        User testUser = new User("TestUser","123",testAccounts);
-
-        testAccounts.add(testAccount1);
-        testAccounts.add(testAccount2);
-        database.users.add(testUser);
-        database.addStuff();
-
-        database.loggedUser = testUser;
-
-        int expectedAmount = 100;
-        int actualAmount = atm.checkAccountBalance(database.loggedUser.accounts.get(0).AccountNumber);
-
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.testUser;
+        String accountNumber = ATM.database.loggedUser.accounts.get(0).AccountNumber;
+        int amountOfMoney = 500;
+        //When
+        atm.depositMoney(accountNumber,amountOfMoney);
+        //Then
+        int expectedAmount = 500;
+        int actualAmount = atm.checkAccountBalance(ATM.database.loggedUser.accounts.get(0).AccountNumber);
         assertEquals(expectedAmount,actualAmount);
     }
 
     @Test
-    void depositMoney() {
+    void checkAccountBalanceUnableToFindAccount() {
+        //Given
         ATM atm = new ATM();
-        Database database = new Database();
-        ArrayList<Account>testAccounts = new ArrayList<>();
-        Account testAccount1 = new Account("123",100);
-        Account testAccount2 = new Account("123",100);
-        User testUser = new User("TestUser","123",testAccounts);
-
-        testAccounts.add(testAccount1);
-        testAccounts.add(testAccount2);
-        database.users.add(testUser);
-        database.addStuff();
-
-        database.loggedUser = testUser;
-
-        String accountNumber = database.loggedUser.accounts.get(0).AccountNumber;
-        int howMuchMoney = 100;
-
-        assertTrue(atm.depositMoney(accountNumber,howMuchMoney));
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.joe;
+        String accountNumber = "Invalid Account Number";
+        int expectedAmount = -1;
+        //When
+        int actualAmount = atm.checkAccountBalance(accountNumber);
+        //Then
+        assertEquals(expectedAmount,actualAmount);
     }
 
     @Test
-    void withDrawMoney() {
+    void checkAccountBalanceEqualsZero() {
+        //Given
         ATM atm = new ATM();
-        Database database = new Database();
-        ArrayList<Account>testAccounts = new ArrayList<>();
-        Account testAccount1 = new Account("123",100);
-        Account testAccount2 = new Account("123",100);
-        User testUser = new User("TestUser","123",testAccounts);
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.testUser;
+        String accountNumber = ATM.database.loggedUser.accounts.get(0).AccountNumber;
+        int expectedAmount = 0;
+        //When
+        int actualAmount = atm.checkAccountBalance(accountNumber);
+        //Then
+        assertEquals(expectedAmount,actualAmount);
+    }
 
-        testAccounts.add(testAccount1);
-        testAccounts.add(testAccount2);
-        database.users.add(testUser);
-        database.addStuff();
 
-        database.loggedUser = testUser;
 
-        String accountNumber = database.loggedUser.accounts.get(0).AccountNumber;
-        int howMuchMoney = 100;
+    @Test
+    void depositMoneyShouldSuccess() {
+        //Given
+        ATM atm = new ATM();
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.users.get(3);
+        int amountToDeposit = 100;
+        String accountNumber = ATM.database.loggedUser.accounts.get(0).AccountNumber;
+        //When
+        atm.depositMoney(accountNumber, amountToDeposit);
+        //Then
+        int expectedAmount = 100;
+        int actualAmount = ATM.database.loggedUser.accounts.get(0).balance;
+        assertEquals(expectedAmount,actualAmount);
+    }
+    @Test
+    void depositMoneyAccountNumberNotFound() {
+        //Given
+        ATM atm = new ATM();
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.users.get(3);
+        int amountToDeposit = 100;
+        String accountNumber = "Invalid Account Number";
+        //When
+        atm.depositMoney(accountNumber, amountToDeposit);
+        //Then
+        int expectedAmount = 0;
+        int actualAmount = ATM.database.loggedUser.accounts.get(0).balance;
+        assertEquals(expectedAmount,actualAmount);
+    }
 
-        assertTrue(atm.withDrawMoney(accountNumber,howMuchMoney));
+    @Test
+    void depositMoneyAccountIsOnMinusBalance() {
+        //Given
+        ATM atm = new ATM();
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.users.get(3);
+        ATM.database.loggedUser.accounts.get(0).balance = -100;
+        int amountToDeposit = 100;
+        String accountNumber = ATM.database.loggedUser.accounts.get(0).AccountNumber;
+        //When
+        atm.depositMoney(accountNumber, amountToDeposit);
+        //Then
+        int expectedAmount = 0;
+        int actualAmount = ATM.database.loggedUser.accounts.get(0).balance;
+        assertEquals(expectedAmount,actualAmount);
+    }
+
+    @Test
+    void withDrawMoneyShouldSuccess() {
+        //Given
+        ATM atm = new ATM();
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.users.get(3);
+        ATM.database.loggedUser.accounts.get(0).balance = 100;
+        int amountToBeWithDrawn = 100;
+        String accountNumber = ATM.database.loggedUser.accounts.get(0).AccountNumber;
+        //When
+        atm.withDrawMoney(accountNumber, amountToBeWithDrawn);
+        //Then
+        int expectedAmount = 0;
+        int actualAmount = ATM.database.loggedUser.accounts.get(0).balance;
+        assertEquals(expectedAmount,actualAmount);
+    }
+    @Test
+    void withDrawAccountNumberNotFound() {
+        //Given
+        ATM atm = new ATM();
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.users.get(3);
+        ATM.database.loggedUser.accounts.get(0).balance = 100;
+        int amountToBeWithDrawn = 100;
+        String accountNumber = "Invalid Account Number";
+        //When
+        atm.withDrawMoney(accountNumber, amountToBeWithDrawn);
+        //Then
+        int expectedAmount = 100;
+        int actualAmount = ATM.database.loggedUser.accounts.get(0).balance;
+        assertEquals(expectedAmount,actualAmount);
+    }
+
+    @Test
+    void withDrawMoneyAccountBalanceIsZero() {
+        //Given
+        ATM atm = new ATM();
+        ATM.database.addStuff();
+        ATM.database.loggedUser = ATM.database.users.get(3);
+        int amountToBeWithDrawn = 100;
+        String accountNumber = ATM.database.loggedUser.accounts.get(0).AccountNumber;
+        //When
+        atm.withDrawMoney(accountNumber, amountToBeWithDrawn);
+        //Then
+        int expectedAmount = 0;
+        int actualAmount = ATM.database.loggedUser.accounts.get(0).balance;
+        assertEquals(expectedAmount,actualAmount);
+
     }
 }

@@ -107,7 +107,6 @@ public class ATM {
             System.out.println("Type in password:");
             password = sc.nextLine();
             for (int i = 0; i < database.users.size(); i++){
-                counter++;
                 if (database.users.get(i).name.equals(name) && database.users.get(i).password.equals(password)){
                     System.out.println("Welcome "+database.users.get(i).name+"!");
                     database.loggedUser = database.users.get(i);

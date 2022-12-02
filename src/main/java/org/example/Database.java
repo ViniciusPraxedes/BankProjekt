@@ -17,6 +17,11 @@ public class Database {
     Account defaultAcc1 = new Account("123",100);
     Account defaultAcc2 = new Account("321",100);
 
+    ArrayList<Account> testUserAccounts = new ArrayList<>();
+    Account testUserAccount1 = new Account("123",0);
+    Account testUserAccount2 = new Account("321",0);
+
+    User testUser = new User("TestUser","123",testUserAccounts);
     User joe = new User("Joe","123",joeAccounts);
     User loggedUser = new User("Logged user","123",defaultAccounts);
     User user = new User("User","123",userAccounts);
@@ -36,9 +41,16 @@ public class Database {
                 users.add(user);
                 userAccounts.add(userAccount1);
                 userAccounts.add(userAccount2);
+
+                users.add(testUser);
+                testUserAccounts.add(testUserAccount1);
+                testUserAccounts.add(testUserAccount2);
                 break;
             }
         }while(true);
+    }
+    public void makeLoggedUserEqualsUser(User user){
+        this.loggedUser = user;
     }
     public void createAnAccount(String name, String password){
         for(int i = 0; i < users.size(); i++){
